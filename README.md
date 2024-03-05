@@ -28,7 +28,8 @@ Usage:
 COMMAND:
     read                 Read binary from the given QSPI's address
     write                Write binary to the given QSPI's address
-    test                 Memory test 
+    test                 Memory test
+    store                Store the default ini file
     
 Options:
     -h, --help           Show this screen and exit
@@ -59,6 +60,9 @@ nrf_memory write --saddr=0x2400 --ifile=memory.bin
 nrf_memory test --saddr=0x1000 --size=0x10000 --pattern=0x5A5A5A5A --fulltest=false
 ```
 
+```shell
+nrf_memory store
+```
 
 
 ## Details
