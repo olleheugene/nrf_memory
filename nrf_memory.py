@@ -29,6 +29,7 @@ Example:
     $ nrf_memory read --saddr=0x1200 --size=4096 --ofile=memorydata.bin
     $ nrf_memory write --ifile=memory.bin
     $ nrf_memory test --pattern=0x55555555
+    $ nrf_memory store
 ----------------------------------------------------------------------------------
 """
 VERSION      = "\nnrf_memory" + " v0.6"
@@ -65,7 +66,7 @@ config['outputfile']       = 'omemory_data.bin'
 config['inputfile']        = 'imemory_data.bin'
 config['serial']           = ''
 config['family']           = 'AUTO'
-config['conf']             = 'QspiDefault.ini'
+config['conf']             = get_resources('QspiDefault.ini')
 config['dumpmode']         = 'FALSE'
 config['pattern']          = '0x55555555'
 config['fulltest']         = 'FALSE'
@@ -382,6 +383,19 @@ class CLI (cmd.Cmd):
             print("Verification completed")
             sys.exit(0)
 
+    @docopt_cmd
+    def do_store(self, arg):
+        """
+    Usage: store
+        """
+        print(os.getcwd())
+        print(get_resources('QspiDefault.ini'))
+        shutil.copyfile(get_resources('QspiDefault.ini'), os.getcwd()+'\\QspiDefault.ini')
+
+        print("Configuration file copy done")
+        sys.exit(0)
+
+
 def hex_dump(buffer,start_offset=0, dumpfile='temp_dump.txt'):
     filedump = open(dumpfile, "wb")  
     filedump.write(dumpfile.encode('ascii')+str('(Binary Size:%s Byte(s))'%len(buffer)).encode('ascii')+'\n'.encode('ascii'))
@@ -429,6 +443,8 @@ if __name__ == '__main__':
             CLI().do_write(sys.argv[2:])
         elif opt['COMMAND'] == 'test':
             CLI().do_test(sys.argv[2:])
+        elif opt['COMMAND'] == 'store':
+            CLI().do_store(sys.argv[2:])
         else:
             print(__doc__)
             sys.exit(1)
