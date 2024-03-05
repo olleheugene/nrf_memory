@@ -54,7 +54,7 @@ def get_resources(resource_file):
     if hasattr(sys, '_MEIPASS'):
         path = os.path.join(sys._MEIPASS, ".", resource_file)
     else:
-        path = os.path.join(".", resource_file)
+        path = os.path.join("resources", resource_file)
     return (path)
 
 configtoml=dict()
