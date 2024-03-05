@@ -46,6 +46,15 @@ import os
 import cmd
 from time import sleep
 from progress.bar import Bar
+import shutil
+
+def get_resources(resource_file):
+    # if getattr(sys, 'frozen', None):
+    if hasattr(sys, '_MEIPASS'):
+        path = os.path.join(sys._MEIPASS, ".", resource_file)
+    else:
+        path = os.path.join(".", resource_file)
+    return (path)
 
 configtoml=dict()
 
