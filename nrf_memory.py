@@ -176,7 +176,7 @@ class CLI (cmd.Cmd):
                 print("--------------------------------------------------------")
             except Exception as error:
                 self.print_err(error)
-                exit(1)
+                sys.exit(1)
 
             print("Reading from target...")
             data = b''
@@ -237,7 +237,7 @@ class CLI (cmd.Cmd):
                 print("-------------------------------------------------------")
             except Exception as error:
                 self.print_err(error)
-                exit(1)
+                sys.exit(1)
             
             print("Writing binary to target...")
             r_bin = bytes()
@@ -298,7 +298,7 @@ class CLI (cmd.Cmd):
 
             except Exception as error:
                 self.print_err(error)
-                exit(1)
+                sys.exit(1)
 
             pattern_int = int(config['pattern'],16)
             writeVal = bytes(BLOCKSIZE)
@@ -329,7 +329,7 @@ class CLI (cmd.Cmd):
                             bar.next()
                         except Exception as error:
                             self.print_err(error)
-                            exit(1)
+                            sys.exit(1)
                     bar.index = numofblocks
                     bar.update()
             else:
