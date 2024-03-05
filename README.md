@@ -6,15 +6,15 @@
 
 This tool provides the ability to write and read binary data to and from an external QSPI flash, a shortcoming of the nrfjprog.exe commonly used in the nRF5 series.
 
-This is supporting 3 main features that reading the binary data from QSPI flash, writing the binary data to QSPI flash and verifying the reliability.
+This supports 3 main features reading the binary data from QSPI flash, writing the binary data to QSPI flash, and verifying the reliability.
 
 
 
 ## Usage
 
-At first , **Change the  CS/SCK/DIO pins in QspiDefault.ini**  to fit your target board.
+First, **Change the  CS/SCK/DIO pins in QspiDefault.ini**  to fit your target board.
 
-Then use the command and options as following below description.
+Then you can use the command and options following the description below.
 
 ```shell
 Usage: 
@@ -43,7 +43,7 @@ Options:
     --dump=<n>           Enable/Disable hex-dump (true=enable, false=disable)
     --pattern=<pattern>  4Bytes test pattern (default:0x55555555)
     --fulltest=<n>       Test whole memory (true=enable, false=disable)
-    --family=<device>    Device Family (NRF52, NRF53, NRF91). If not set, set automatically
+    --family=<device>    Device Family (NRF52, NRF53, NRF91). If not set, set it automatically
 ```
 
 ####  Example
@@ -67,10 +67,10 @@ nrf_memory store
 
 ## Details
 
-> - The tool will be detecting the device family automatically if you don't provide the information
-> - If you don't set the J-link serial number, the tool will be listing or select the J-link automatically
+> - The tool will detect the device family automatically if you don't provide the information
+> - If you don't set the J-link serial number, the tool will list or select the J-link automatically
 
-**Reading out and writing the data from/to given range of QSPI flash memory**
+**Reading out and writing the data from/to a given range of QSPI flash memory**
 
 ![image-20240118110424921](./Resource_README/image-20240118110424921.png)
 
@@ -90,7 +90,7 @@ nrf_memory store
 
 I used this tool to analyze the stored data in littlefs.
 
-After reading out from the QSPI flash memory, you can see the data that stored in the littlefs through [littlefs disk image viewer (tniessen.github.io)](https://tniessen.github.io/littlefs-disk-img-viewer/), as shown in the figure below.
+After reading out from the QSPI flash memory, you can see the data stored in the littlefs through [littlefs disk image viewer (tniessen.github.io)](https://tniessen.github.io/littlefs-disk-img-viewer/), as shown in the figure below.
 
 
 
@@ -100,5 +100,5 @@ After reading out from the QSPI flash memory, you can see the data that stored i
 
 ## Limitations
 
-- The executable file requires Window 10 or later. 
+- Creating the executable file only supports the Windows OS.
 - Not yet supported intel HEX format
