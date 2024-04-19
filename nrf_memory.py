@@ -5,7 +5,8 @@ nRF Memory external flash read/writer
 COMMAND:
     read                 Read binary from the given QSPI's address
     write                Write binary to the given QSPI's address
-    test                 Memory test 
+    test                 Memory test
+    storeconfig          Store configuration .ini file 
     
 Options:
     -h, --help           Show this screen and exit
@@ -16,20 +17,21 @@ Options:
     --ifile=<filename>   Input binary file name
     --serial=<n>         J-link serial number. If not set, listing or set automatically
     --conf=<filename>    Configuration File
-    --dump=<n>           Enable/Disable hex-dump (true=enable, false=disable)
+    --dump               hex-dump (default: no dump)
     --pattern=<pattern>  4Bytes test pattern (default:0x55555555)
-    --fulltest=<n>       Test whole memory (true=enable, false=disable)
+    --fulltest           Test whole memory (default: partial test)
     --family=<device>    Device Family (NRF52, NRF53, NRF91). If not set, set automatically
+    --reset              Reset device prior to execute command
 ----------------------------------------------------------------------------------
 Usage: 
-    nrf_memory COMMAND [--family=<DeviceFamily>] [--saddr=<startaddress>] [--size=<n>] [--ofile=<filename>.bin] [--ifile=<filename>.bin] [--serial=<serialno.>] [--conf=<ini_file>] [--dump=<n>] [--pattern=<pattern>] [--fulltest=<n>]
+    nrf_memory COMMAND [--family=<DeviceFamily>] [--saddr=<startaddress>] [--size=<n>] [--ofile=<filename>.bin] [--ifile=<filename>.bin] [--serial=<serialno.>] [--conf=<ini_file>] [--dump] [--pattern=<pattern>] [--fulltest] [--reset]
     nrf_memory (-h | --help | -v | --version)
 
 Example:
     $ nrf_memory read --saddr=0x1200 --size=4096 --ofile=memorydata.bin
     $ nrf_memory write --ifile=memory.bin
     $ nrf_memory test --pattern=0x55555555
-    $ nrf_memory store
+    $ nrf_memory storeconfig
 ----------------------------------------------------------------------------------
 """
 VERSION      = "\nnrf_memory" + " v0.6"
@@ -61,15 +63,16 @@ configtoml=dict()
 
 config = dict()
 config['startaddr']        = '0x0'
-config['size']             = 65536
+config['size']             = 8388608
 config['outputfile']       = 'omemory_data.bin'
 config['inputfile']        = 'imemory_data.bin'
 config['serial']           = ''
 config['family']           = 'AUTO'
 config['conf']             = get_resources('QspiDefault.ini')
-config['dumpmode']         = 'FALSE'
+config['dumpmode']         = False
+config['reset']            = False
 config['pattern']          = '0x55555555'
-config['fulltest']         = 'FALSE'
+config['fulltest']         = False
 config['testcount']        = 10
 
 # Command Line Interface
@@ -129,6 +132,8 @@ class CLI (cmd.Cmd):
             config['family']           = arg['--family']
         if(arg['--conf']):
             config['conf']             = arg['--conf']
+        if(arg['--reset']):
+            config['reset']            = True
 
         if(str(config['family']).upper() == 'NRF53'):
             self.deviceFamily = LowLevel.DeviceFamily.NRF53
@@ -143,7 +148,7 @@ class CLI (cmd.Cmd):
             if(arg['--ofile']):
                 config['outputfile']       = arg['--ofile']
             if(arg['--dump']):
-                config['dumpmode']         = arg['--dump'].upper()
+                config['dumpmode']         = True
         elif(type == TYPE_WRITE):
             if(arg['--ifile']):
                 config['inputfile']        = arg['--ifile']
@@ -151,12 +156,12 @@ class CLI (cmd.Cmd):
             if(arg['--pattern']):
                 config['pattern']          = arg['--pattern']
             if(arg['--fulltest']):
-                config['fulltest']         = arg['--fulltest'].upper()        
+                config['fulltest']         = True
 
     @docopt_cmd
     def do_read(self, arg):
         """
-    Usage: read [--family=<DeviceFamily>] [--saddr=<startaddress>] [--size=<n>] [--ofile=<filename>.bin] [--serial=<serialno.>] [--conf=<ini_file>] [--dump=<n>]
+    Usage: read [--family=<DeviceFamily>] [--saddr=<startaddress>] [--size=<n>] [--ofile=<filename>.bin] [--serial=<serialno.>] [--conf=<ini_file>] [--dump] [--reset]
         """
         self.config(arg,TYPE_READ)
 
@@ -179,7 +184,7 @@ class CLI (cmd.Cmd):
                 print("Start address   \t: %s" % str(config['startaddr']))
                 print("Read Size       \t: %s(%s) Byte(s)" % (str(config['size']),hex(config['size'])))
                 print("Output File     \t: %s" % str(config['outputfile']))
-                if(config['dumpmode'] == 'TRUE'):
+                if(config['dumpmode']):
                     dumpfile,ext=os.path.splitext(config['outputfile'])
                     print("Dump File       \t: %s_dump.txt" % (dumpfile))
                 print("Config File     \t: %s" % str(config['conf']))
@@ -193,8 +198,12 @@ class CLI (cmd.Cmd):
             dumpdata = b''
             # api.qspi_configure_ini('QspiDefault.ini')
             addr = int(config['startaddr'],16)
-            if(config['dumpmode'] == 'TRUE'):
+            if(config['dumpmode']):
                 filename,ext=os.path.splitext(config['outputfile'])
+
+            # if(config['reset']):
+            #     api.sys_reset()
+                
 
             with Bar('Reading', width=50, fill='#', suffix='%(percent).1f%%',max=config['size']) as bar:
                 try:
@@ -208,7 +217,7 @@ class CLI (cmd.Cmd):
                     bar.index = addr+QSPIREADSIZE
                     bar.update()
 
-                    if(config['dumpmode'] == 'TRUE'):
+                    if(config['dumpmode']):
                         hex_dump(dumpdata, int(config['startaddr'],16), dumpfile=(filename+'_dump'+'.txt'))
                 except Exception as error:
                     self.print_err(error)
@@ -278,7 +287,7 @@ class CLI (cmd.Cmd):
     @docopt_cmd
     def do_test(self, arg):
         """
-    Usage: test [--family=<DeviceFamily>] [--saddr=<startaddress>] [--size=<n>] [--serial=<serialno.>] [--conf=<ini_file>] [--pattern=<pattern>] [--fulltest=<n>]
+    Usage: test [--family=<DeviceFamily>] [--saddr=<startaddress>] [--size=<n>] [--serial=<serialno.>] [--conf=<ini_file>] [--pattern=<pattern>] [--fulltest] [--reset]
         """
         self.config(arg,TYPE_TEST)
 
@@ -314,16 +323,17 @@ class CLI (cmd.Cmd):
             writeVal = bytes(BLOCKSIZE)
             writeVal = writeVal.replace(b'\x00\x00\x00\x00', int(config['pattern'],16).to_bytes((pattern_int.bit_length() + 7) // 8, 'big'))
             print("Start Flash test...")
-            if(config['fulltest'] == 'TRUE'):
+            if(config['fulltest']):
                 numofblocks, remain = divmod(api.qspi_get_size(), BLOCKSIZE)
                 testAddress = 0
                 erasePageaddr = 0
                 verifyVal = b''
                 j=0
 
-                print("Erasing whole external flash area...")
+                print("Erasing whole external flash area...(This will take a few tens of seconds depends on memory size)")
                 api.qspi_erase(0x0,LowLevel.QSPIEraseLen.ERASEALL)
 
+                print("Start testing...")
                 with Bar('Testing', width=50, fill='#', suffix='%(percent).1f%% - %(eta)ds',max=numofblocks) as bar:
                     for i in range(0,numofblocks):
                         try:
@@ -349,7 +359,8 @@ class CLI (cmd.Cmd):
                     numofblocks+=1
 
                 position,tmp = divmod(numofblocks,(config['testcount']))
-
+                # api.qspi_erase(0x0,LowLevel.QSPIEraseLen.ERASEALL)
+                # print("ERASE ALL")
                 if(numofblocks >= config['testcount']):
                     with Bar('Testing', width=50, fill='#', suffix='%(percent).1f%%',max=config['testcount']) as bar:
                         bar.index = config['testcount']
